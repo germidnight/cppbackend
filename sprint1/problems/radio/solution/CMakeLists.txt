@@ -6,8 +6,8 @@ set(CMAKE_CXX_STANDARD 20)
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup()
 
-# Ищем Boost версии 1.84
-find_package(Boost 1.84.0 REQUIRED)
+# Ищем Boost версии 1.78
+find_package(Boost 1.78.0 REQUIRED)
 if(Boost_FOUND)
   include_directories(${Boost_INCLUDE_DIRS})
 endif()
@@ -21,5 +21,5 @@ if(WIN32)
   add_definitions(-DNOMINMAX)
 endif()
 
-add_executable(radio src/main.cpp src/audio.h)
+add_executable(radio main.cpp audio.h)
 target_link_libraries(radio PRIVATE Threads::Threads)
