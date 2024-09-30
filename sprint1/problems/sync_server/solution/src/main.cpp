@@ -73,9 +73,8 @@ StringResponse HandleRequest(StringRequest &&req) {
                             ContentType::TEXT_HTML, length);
     };
     // Здесь можно обработать запрос и сформировать ответ
-    std::string answer = "<strong>Hello, "s
-                             .append(req.target().substr(1))
-                             .append("</strong>"s);
+    std::string answer = "Hello, "s
+                             .append(req.target().substr(1));
     if (req.method() == http::verb::get) {
         return text_response(http::status::ok, answer);
     } else if (req.method() == http::verb::head) {
