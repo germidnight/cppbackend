@@ -15,6 +15,9 @@ model::Game LoadGame(const std::filesystem::path& json_path) {
 
     // Загрузить содержимое файла json_path, в виде строки
     std::ifstream json_file(json_path, std::ios::in);
+    if (!json_file.is_open()) {
+        throw std::runtime_error("Can't open file:" + json_path.string());
+    }
     std::string json_str{std::istreambuf_iterator<char>(json_file), std::istreambuf_iterator<char>()};
 
     // Распарсить строку как JSON, используя boost::json::parse
@@ -114,7 +117,7 @@ std::string GetListOfMaps(const model::Game &game) {
     return {boost::json::serialize(val_json)};
 }
 
-std::optional<std::string> GetMap(const model::Map::Id map_id, const model::Game &game) {
+std::optional<std::string> GetMap(const model::Map::Id& map_id, const model::Game &game) {
     const std::string id_str = "id";
     const std::string name_str = "name";
     const std::string roads_str = "roads";

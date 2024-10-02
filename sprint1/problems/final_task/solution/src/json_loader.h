@@ -18,7 +18,7 @@ void LoadAndAddOffices(const boost::json::array& office_value, model::Map &map);
 
 // Функции для формирования ответа (request_handler)
 std::string GetListOfMaps(const model::Game& game);
-std::optional<std::string> GetMap(const model::Map::Id map_id, const model::Game& game);
+std::optional<std::string> GetMap(const model::Map::Id& map_id, const model::Game& game);
 std::string GetMapNotFoundString();
 std::string GetBadRequestString();
 
