@@ -1,5 +1,13 @@
+<<<<<<< HEAD
 [requires]
 boost/1.78.0
 
 [generators]
 cmake
+=======
+[requires]
+boost/1.78.0
+
+[generators]
+cmake
+>>>>>>> fcc504a15e4e401244d2e730709991971b06985c
