@@ -37,21 +37,21 @@ namespace players {
     class PlayerTokens {
     public:
         using TokenHasher = util::TaggedHasher<Token>;
-        using TokenToPlayer = std::unordered_map<Token, const Player*, TokenHasher>;
+        using TokenToPlayer = std::unordered_map<Token, std::shared_ptr<Player>, TokenHasher>;
 
         /* Должны ли имена пользователей (собак) быть уникальными?
          * Нужно ли имена пользователей проверять перед добавлением?
          * На всякий случай (хоть и 128 бит это очень много), но проверяем не сгенерировался ли повторяющийся токен*/
-        const Token& AddPlayer(const Player* player) {
+        std::shared_ptr<Token> AddPlayer(std::shared_ptr<Player> player) {
             Token token(detail::TokenTag{generator1_(), generator2_()}.Serialize());
             while (token_to_player_.count(token) > 0) {
                 token = Token(detail::TokenTag{generator1_(), generator2_()}.Serialize());
             }
-            token_to_player_[token] = player;
-            return tokens_.emplace_back(std::move(token));
+            token_to_player_[token] = std::move(player);
+            return tokens_.emplace_back(std::make_shared<Token>(token));
         }
 
-        const Player* FindPlayerByToken(const Token& token) const noexcept {
+        std::shared_ptr<Player> FindPlayerByToken(const Token &token) const noexcept {
             if (token_to_player_.count(token) > 0) {
                 return token_to_player_.at(token);
             }
@@ -69,7 +69,7 @@ namespace players {
             return dist(random_device_);
         }()};
 
-        std::vector<Token> tokens_;
+        std::vector<std::shared_ptr<Token>> tokens_;
         TokenToPlayer token_to_player_;
     };
 
@@ -81,21 +81,20 @@ namespace players {
          * 1) создаём собаку для пользователя
          * 2) сохраняем игровую сессию пользователя
          */
-        explicit Player(model::Dog dog, model::GameSession* game_session)
-                        : dog_(std::make_shared<model::Dog>(dog))
-                        , session_(game_session) {}
+        explicit Player(model::Dog dog, std::shared_ptr<model::GameSession> game_session)
+            : dog_(std::make_shared<model::Dog>(dog)), session_(std::move(game_session)) {}
 
-        model::Dog* GetDog() const noexcept {
-            return dog_.get();
+        std::shared_ptr<model::Dog> GetDog() const noexcept {
+            return dog_;
         }
 
-        model::GameSession* GetGameSession() const noexcept {
+        std::shared_ptr<model::GameSession> GetGameSession() const noexcept {
             return session_;
         }
 
     private:
         std::shared_ptr<model::Dog> dog_;
-        model::GameSession* session_; /* Станет невалидным при увеличении capacity вектора model::Game::sessions_ - что делать непонятно */
+        std::shared_ptr<model::GameSession> session_;
     };
 
     /* --------------------------------------- Перечень всех игроков --------------------------------------- */
@@ -111,18 +110,24 @@ namespace players {
          * 1) создаём и добавляем игрока с собакой в перечень игроков
          * 2) в выбранной игровой сессии добавляем собаку нового игрока
          */
-        const Player& Add(std::string player_name, model::GameSession* game_session) {
-            const Player& player = players_.emplace_back(model::Dog(++next_dog_id_, player_name), game_session);
-            game_session->AddDog(player.GetDog());
+        std::shared_ptr<Player> Add(std::string player_name, std::shared_ptr<model::GameSession> game_session) {
+            auto player = players_.emplace_back(std::make_shared<Player>(model::Dog(++next_dog_id_, player_name), game_session));
+            game_session->AddDog(player->GetDog());
+            map_id_to_index_.emplace(player->GetDog()->GetDogId(), players_.size() - 1);
             return player;
         }
 
-        /*Player& FindByDogIdAndMapId(unsigned int dog_id, model::Map::Id map_id) {
-            //
-        }*/
+        std::shared_ptr<Player> FindPlayerByDogId(size_t dog_id) const {
+            if (map_id_to_index_.count(dog_id) > 0) {
+                return players_[map_id_to_index_.at(dog_id)];
+            }
+            return nullptr;
+        }
+
     private:
-        std::vector<Player> players_;
+        std::vector<std::shared_ptr<Player>> players_;
         size_t next_dog_id_ = 0;
+        std::unordered_map<size_t, size_t> map_id_to_index_; // <dog_id, index_in_players_>
     };
 
 } // namespace players

@@ -174,22 +174,22 @@ public:
     static constexpr size_t MAX_DOGS_ON_MAP = std::numeric_limits<size_t>::max();
 
     using Maps = std::vector<Map>;
-    using Sessions = std::vector<GameSession>;
+    using Sessions = std::vector<std::shared_ptr<GameSession>>;
 
     void AddMap(Map map);
 
-    const Maps& GetMaps() const noexcept {
+    const Maps &GetMaps() const noexcept {
         return maps_;
     }
 
-    const Map* FindMap(const Map::Id& id) const noexcept {
+    const Map *FindMap(const Map::Id &id) const noexcept {
         if (auto it = map_id_to_index_.find(id); it != map_id_to_index_.end()) {
             return &maps_.at(it->second);
         }
         return nullptr;
     }
 
-    GameSession* PlacePlayerOnMap(const Map::Id &map_id);
+    std::shared_ptr<GameSession> PlacePlayerOnMap(const Map::Id &map_id);
 
 private:
     using MapIdHasher = util::TaggedHasher<Map::Id>;

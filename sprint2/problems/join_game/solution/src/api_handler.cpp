@@ -26,8 +26,8 @@ namespace http_handler {
         return response;
     }
 
-    StringResponse APIHandler::ReturnAPIResponse(const StringRequest&& req, std::string req_str,
-                                                    unsigned int version, bool keep_alive) {
+    StringResponse APIHandler::ReturnAPIResponse(const StringRequest &&req, std::string req_str,
+                                                 unsigned int version, bool keep_alive) {
         const std::string command_maps1_str = "/api/v1/maps";
         const std::string command_map2_str = "/api/v1/maps/";
         const size_t command_map2_symbols = command_map2_str.length();
@@ -111,14 +111,14 @@ namespace http_handler {
          * 1) получаем игровую сессию
          * 2) добавляем пользователя
          * 3) добавляем токен */
-        model::GameSession* game_session = game_.PlacePlayerOnMap(map->GetId());
+        auto game_session = game_.PlacePlayerOnMap(map->GetId());
         if (game_session == nullptr) {
             return text_response(http::status::not_found, json_loader::MakeErrorString("mapNotFound", "In Game::map_id_to_index_ Map not found"));
         }
-        const players::Player& player = players_.Add(join_data.user_name, game_session);
-        players::Token player_token = player_tokens_.AddPlayer(&player);
+        auto player = players_.Add(join_data.user_name, game_session);
+        auto player_token = player_tokens_.AddPlayer(player);
 
-        return text_response(http::status::ok, json_loader::GetPlayerAddedAnswer(*player_token, player.GetDog()->GetDogId()));
+        return text_response(http::status::ok, json_loader::GetPlayerAddedAnswer(**player_token, player->GetDog()->GetDogId()));
     }
 
     /*
@@ -138,13 +138,13 @@ namespace http_handler {
                                  json_loader::MakeErrorString("invalidToken", "Authorization header is missing"));
         }
 
-        const players::Player* found_player = player_tokens_.FindPlayerByToken(players::Token(std::move(std::string(bearer_token))));
+        auto found_player = player_tokens_.FindPlayerByToken(players::Token(std::move(std::string(bearer_token))));
         if (found_player == nullptr) {
             return text_response(http::status::unauthorized,
                                  json_loader::MakeErrorString("unknownToken", "Player token has not been found"));
         }
 
-        const model::GameSession* session = found_player->GetGameSession();
+        auto session = found_player->GetGameSession();
         model::GameSession::Dogs dogs = session->GetDogs();
         if (head_only) {
             return text_response(http::status::ok, "", json_loader::GetSessionPlayers(dogs).length());

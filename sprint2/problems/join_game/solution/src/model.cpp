@@ -38,15 +38,15 @@ void Game::AddMap(Map map) {
     }
 }
 
-GameSession* Game::PlacePlayerOnMap(const Map::Id &map_id) {
+std::shared_ptr<GameSession> Game::PlacePlayerOnMap(const Map::Id &map_id) {
     if (map_id_to_index_.count(map_id) == 0) {
         return nullptr;
     }
     const size_t map_index = map_id_to_index_.at(map_id);
-    if (sessions_[map_index].empty() || (sessions_[map_index].back().CountDogsInSession() == MAX_DOGS_ON_MAP)) {
-        sessions_[map_index].emplace_back(model::GameSession());
+    if (sessions_[map_index].empty() || (sessions_[map_index].back()->CountDogsInSession() == MAX_DOGS_ON_MAP)) {
+        sessions_[map_index].emplace_back(std::make_shared<model::GameSession>(model::GameSession(&maps_[map_index])));
     }
-    return &(sessions_[map_index].back());
+    return sessions_[map_index].back();
 }
 
 }  // namespace model

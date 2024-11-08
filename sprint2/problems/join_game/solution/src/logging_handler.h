@@ -60,7 +60,7 @@ class LoggingRequestHandler {
 
 public:
     explicit LoggingRequestHandler(std::shared_ptr<MainRequestHandler> handler) noexcept
-				    : decorated_(std::move(handler)) {}
+                                    : decorated_(std::move(handler)) {}
 
     template <typename Body, typename Allocator, typename Send>
     void operator()(http::request<Body, http::basic_fields<Allocator>> &&req, Send &&send,

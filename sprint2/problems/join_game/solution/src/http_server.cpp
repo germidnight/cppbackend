@@ -7,10 +7,6 @@ namespace http_server {  // namespace http_server
 
 using namespace std::literals;
 
-/*void ReportError(beast::error_code ec, std::string_view what) {
-    std::cerr << what << ": "sv << ec.message() << std::endl;
-}*/
-
 // ---------------------------------------- SessionBase ----------------------------------------
 void SessionBase::Run() {
     /* Вызываем метод Read, используя executor объекта stream_.
@@ -41,7 +37,6 @@ void SessionBase::OnRead(beast::error_code ec, [[maybe_unused]] std::size_t byte
         return Close();
     }
     if (ec) {
-        //return ReportError(ec, "read"sv);
         return logging_handler::LogNetworkError(ec.value(), ec.message(), "read"sv);
     }
     HandleRequest(std::move(request_));
@@ -51,7 +46,6 @@ void SessionBase::Close() {
     beast::error_code ec;
     stream_.socket().shutdown(tcp::socket::shutdown_send, ec);
     if (ec) {
-        //ReportError(ec, "Socket close error"sv);
         logging_handler::LogNetworkError(ec.value(), ec.message(), "close"sv);
     }
 }
@@ -62,7 +56,6 @@ void SessionBase::Close() {
  * - продолжим обмен данными с клиентом. */
 void SessionBase::OnWrite(bool close, beast::error_code ec, [[maybe_unused]] std::size_t bytes_written) {
     if (ec) {
-        //return ReportError(ec, "write"sv);
         logging_handler::LogNetworkError(ec.value(), ec.message(), "write"sv);
     }
     if (close) {
