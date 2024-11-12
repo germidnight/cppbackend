@@ -82,7 +82,7 @@ namespace model {
     public:
         using Dogs = std::vector<std::shared_ptr<Dog>>;
 
-	explicit GameSession(model::Map* map) : map_{map} {}
+	explicit GameSession(model::Map* map) : map_(map) {}
 
         void AddDog(std::shared_ptr<Dog> dog) {
             auto inserted_dog = dogs_.emplace_back(std::move(dog));
@@ -105,12 +105,12 @@ namespace model {
         }
 
         Map* GetMap() {
-            return map_.get();
+            return map_;
         }
 
     private:
         Dogs dogs_;
-        std::shared_ptr<Map> map_;
+        model::Map* map_;
         std::unordered_map<size_t, size_t> map_id_to_index_; // <dog_id, index_in_dogs_>
     };
 

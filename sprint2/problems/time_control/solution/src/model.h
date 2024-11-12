@@ -1,5 +1,6 @@
 #pragma once
 #include <limits>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -167,7 +168,8 @@ public:
 
 private:
     using OfficeIdToIndex = std::unordered_map<Office::Id, size_t, util::TaggedHasher<Office::Id>>;
-    std::vector<size_t> GetRoadByPosition(const Position& pos) const; // возвращает массив индексов дорог в массиве
+
+    std::vector<size_t> GetRoadByPosition(const Position &pos) const;
 
     Id id_;
     std::string name_;
@@ -178,8 +180,13 @@ private:
 
     OfficeIdToIndex warehouse_id_to_index_;
     Offices offices_;
-    static constexpr double HALF_ROAD_WIDE = 0.4;
+
+    static constexpr double HALF_ROAD_WIDE = 0.4; // она есть также в detail (model.cpp)
     Roads normal_roads_; /* массив дорог в котором координаты начала дороги всегда меньше координат конца */
+    /* все горизонтальные дороги ключ - y-координата, значение - индекс в normal_roads_ */
+    std::unordered_multimap<Coord, size_t> hor_roads_;
+    /* все вертикальные дороги ключ - x-координата, значение - индекс в normal_roads_ */
+    std::unordered_multimap<Coord, size_t> vert_roads_;
 };
 
 class Game {

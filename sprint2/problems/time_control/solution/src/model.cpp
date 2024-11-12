@@ -3,7 +3,6 @@
 #include <cmath>
 #include <random>
 #include <stdexcept>
-#include <optional>
 
 namespace model {
 using namespace std::literals;
@@ -23,6 +22,14 @@ void Map::AddOffice(Office office) {
     }
 }
 
+/*
+ * Считаем что в каждой координате может быть от ноля до двух вертикальных дорог
+ * и от ноля до двух горизонтальных. (Могут быть перекрёстки 3-х и 4-х дорог)
+ * К массиву дорог добавляется 3 вспомогательных контейнера:
+ * - normal_roads_  - массив дорог с нормализованными координатами (координаты начала меньше координат конца)
+ * - hor_roads_     - unordered_map< Y-координата дороги, индекс в normal_roads_ >
+ * - vert_roads_    - unordered_map< X-координата дороги, индекс в normal_roads_ >
+ */
 void Map::AddRoad(const Road& road) {
     Point start = road.GetStart();
     Point end = road.GetEnd();
@@ -35,8 +42,10 @@ void Map::AddRoad(const Road& road) {
     }
     if (road.IsHorizontal()) {
         normal_roads_.emplace_back(Road::HORIZONTAL, start, end.x);
+        hor_roads_.insert({start.y, normal_roads_.size() - 1});
     } else {
         normal_roads_.emplace_back(Road::VERTICAL, start, end.y);
+        vert_roads_.insert({start.x, normal_roads_.size() - 1});
     }
     roads_.emplace_back(road);
 }
@@ -103,9 +112,11 @@ namespace detail {
         return static_cast<Coord>(pos - round_delta);
     }
 
-    /* Дороги общие для начальной точки пути и для конечной точки пути  */
+    /* Дороги общие для начальной точки пути и для конечной точки пути */
     bool FoundRoad(const std::vector<size_t> &roads_now, const std::vector<size_t> &roads_future) {
+        /* предполагается малое число элементов в векторах */
         if (!roads_now.empty() && !roads_future.empty()) {
+            /* предполагается малое число элементов в векторах */
             for (const size_t road_n : roads_now) {
                 for (const size_t road_f : roads_future) {
                     if (road_n == road_f) {
@@ -113,7 +124,15 @@ namespace detail {
                     }
                 }
             }
+            /* для большого количества элементов векторах */
+            /*std::set<size_t> temp_r_f{roads_future.begin(), roads_future.end()};
+            for (const size_t road_n : roads_now) {
+                if (temp_r_f.count(road_n) > 0) {
+                    return true;
+                }
+            }*/
         }
+
         return false;
     }
 
@@ -134,6 +153,7 @@ namespace detail {
         }
         return false;
     }
+
 } // namespace detail
 
 /*
@@ -157,11 +177,11 @@ DogState Map::MoveDog(const std::shared_ptr<Dog> dog, double time) const {
     Position pos_future = {pos_now.x + (time * dog_speed.x), pos_now.y + (time * dog_speed.y)};
     std::vector<size_t> roads_future = GetRoadByPosition(pos_future);
 
-    bool calculated = false;
     if (detail::FoundRoad(roads_now, roads_future)) { // можно переместиться в конечную точку
         new_dog_state.position = pos_future;
     } else { // нельзя переместиться в конечную точку - нужно найти максимальную доступную крайнюю точку
         /* Ищем дорогу, которая позволяет уехать максимально далеко в нужном направлении */
+        bool calculated = false;
         size_t long_road_idx = 0;
         double max_length = 0.;
         for (size_t i = 0; i < roads_now.size(); ++i) {
@@ -204,7 +224,7 @@ DogState Map::MoveDog(const std::shared_ptr<Dog> dog, double time) const {
         if (dog_speed.y != 0.) {
             speed_sign_y = dog_speed.y / std::fabs(dog_speed.y);
         }
-        if (calculated) { /* Движемся вдоль дороги */
+        if (calculated) { /* Движемся вдоль дороги и не в крайней точке */
             if (normal_roads_[long_road_idx].IsHorizontal()) {
                 if (!detail::DoubleIsZero(max_length)) {
                     new_dog_state.position.x += ((max_length + HALF_ROAD_WIDE) * speed_sign_x);
@@ -218,12 +238,14 @@ DogState Map::MoveDog(const std::shared_ptr<Dog> dog, double time) const {
                     new_dog_state.position.y += (HALF_ROAD_WIDE * speed_sign_y);
                 }
             }
-        } else { /* Движемся поперёк дороги */
+        } else { /* Движемся поперёк дороги или в крайней точке дороги */
             if (!detail::DoubleIsZero(dog_speed.x)) {
-                new_dog_state.position.x = detail::RoundPosition(new_dog_state.position.x) + HALF_ROAD_WIDE * speed_sign_x;
+                new_dog_state.position.x = detail::RoundPosition(new_dog_state.position.x) +
+                                           HALF_ROAD_WIDE * speed_sign_x;
             }
             if (!detail::DoubleIsZero(dog_speed.y)) {
-                new_dog_state.position.y = detail::RoundPosition(new_dog_state.position.y) + HALF_ROAD_WIDE * speed_sign_y;
+                new_dog_state.position.y = detail::RoundPosition(new_dog_state.position.y) +
+                                           HALF_ROAD_WIDE * speed_sign_y;
             }
         }
         new_dog_state.velocity.x = 0.;
@@ -231,24 +253,27 @@ DogState Map::MoveDog(const std::shared_ptr<Dog> dog, double time) const {
     }
     return new_dog_state;
 }
-
+/* Возвращает перечень дорог на которых может находиться собака */
 std::vector<size_t> Map::GetRoadByPosition(const Position &pos) const {
-    Point curr_pos{static_cast<Coord>(detail::RoundPosition(pos.x)),
-                   static_cast<Coord>(detail::RoundPosition(pos.y))};
+    Point cur_pos{detail::RoundPosition(pos.x), detail::RoundPosition(pos.y)};
     std::vector<size_t> found_road_idxs;
-
-    for (size_t i = 0; i < normal_roads_.size(); ++i) {
-        if (normal_roads_[i].IsHorizontal()) {
-            if ((normal_roads_[i].GetStart().y == curr_pos.y) &&
-                (curr_pos.x >= normal_roads_[i].GetStart().x) &&
-                (curr_pos.x <= normal_roads_[i].GetEnd().x)) {
-                found_road_idxs.push_back(i);
+    if (hor_roads_.count(cur_pos.y) > 0) {
+        // Нашли хотя бы одну горизонтальную дорогу
+        auto bucket_idx = hor_roads_.bucket(cur_pos.y);
+        for (auto it = hor_roads_.begin(bucket_idx); it != hor_roads_.end(bucket_idx); ++it) {
+            if ((cur_pos.x >= normal_roads_[it->second].GetStart().x) &&
+                (cur_pos.x <= normal_roads_[it->second].GetEnd().x)) {
+                found_road_idxs.push_back(it->second);
             }
-        } else {
-            if ((normal_roads_[i].GetStart().x == curr_pos.x) &&
-                (curr_pos.y >= normal_roads_[i].GetStart().y) &&
-                (curr_pos.y <= normal_roads_[i].GetEnd().y)) {
-                found_road_idxs.push_back(i);
+        }
+    }
+    if (vert_roads_.count(cur_pos.x)) {
+        // Нашли хотя бы одну вертикальную дорогу
+        auto bucket_idx = vert_roads_.bucket(cur_pos.x);
+        for (auto it = vert_roads_.begin(bucket_idx); it != vert_roads_.end(bucket_idx); ++it) {
+            if ((cur_pos.y >= normal_roads_[it->second].GetStart().y) &&
+                (cur_pos.y <= normal_roads_[it->second].GetEnd().y)) {
+                found_road_idxs.push_back(it->second);
             }
         }
     }
