@@ -272,7 +272,7 @@ JoinGame LoadJSONJoinGame(std::string_view request_body) {
     const std::string map_id_str = "mapId";
 
     boost::system::error_code ec;
-    auto join_data = boost::json::parse(std::string(request_body), ec).as_object();
+    auto join_data = boost::json::parse(std::forward<std::string>(std::string(request_body)), ec).as_object();
 
     if (ec) {
         return JoinGame({}, {}, true);

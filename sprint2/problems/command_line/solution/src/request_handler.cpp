@@ -58,9 +58,9 @@ namespace http_handler {
      * - std::invalid_argument - невозможно сконвертировать  */
     std::string DecodeURI(const std::string_view uri_string) {
         std::string result = "";
-        for (int i = 0; i < uri_string.length(); ++i) {
+        for (size_t i = 0; i < uri_string.length(); ++i) {
             if (uri_string[i] == '%') {
-                unsigned long x = std::stoul(std::string("0x").append(uri_string.substr(i + 1, 2)), nullptr, 16);
+                uint64_t x = std::stoul(std::string("0x").append(uri_string.substr(i + 1, 2)), nullptr, 16);
                 result += static_cast<char>(x);
                 i += 2;
             } else {
