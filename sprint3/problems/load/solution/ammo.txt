@@ -1,0 +1,36 @@
+136 
+GET /api/v1/maps HTTP/1.1
+Host: localhost
+User-Agent: tank
+Accept: */*
+Content-Type: application/json
+Connection: keep-alive
+
+141 
+GET /api/v1/maps/map1 HTTP/1.1
+Host: localhost
+User-Agent: tank
+Accept: */*
+Content-Type: application/json
+Connection: keep-alive
+
+202 
+POST /api/v1/game/join HTTP/1.1
+Host: localhost
+User-Agent: tank
+Accept: */*
+Content-Type: application/json
+Connection: keep-alive
+Content-Length: 38
+
+{"userName": "User1", "mapId": "map1"}
+182 
+POST /api/v1/game/tick HTTP/1.1
+Host: localhost
+User-Agent: tank
+Accept: */*
+Content-Type: application/json
+Connection: keep-alive
+Content-Length: 18
+
+{"timeDelta": 140}
