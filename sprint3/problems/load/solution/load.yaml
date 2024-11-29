@@ -6,7 +6,7 @@ phantom:
   ammo_type: phantom                        # тип запросов POST (или uri для GET)
   load_profile:
     load_type: rps                          # тип нагрузки
-    schedule: const(570, 1m)                # постоянный профиль 570 rps в течение минуты
+    schedule: const(270, 1m)                # постоянный профиль 570 rps в течение минуты
   ssl: false                                # если нужна поддержка https, то нужно указать true
 autostop:
   autostop:                                 # автоостановка теста при 10% ошибок с кодом 5хх в течение 5 секунд
