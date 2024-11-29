@@ -27,7 +27,7 @@ namespace model {
     }
 
     /* Удаление всех элементов списка, индексы которых отмечены true */
-    void GameSession::RemoveObjectsFromLost(std::vector<bool> idxs_to_remove) {
+    void GameSession::RemoveObjectsFromLost(const std::vector<bool>& idxs_to_remove) {
         assert(lost_objects_.size() == idxs_to_remove.size());
 
         std::vector<LostObjects::iterator> its_to_erase;

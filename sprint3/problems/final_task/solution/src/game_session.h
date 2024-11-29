@@ -108,7 +108,7 @@ namespace model {
         std::vector<PickedObject> FlushPickedObjects() {
             std::vector<PickedObject> result(objects_.begin(), objects_.end());
             objects_.clear();
-            return std::move(result);
+            return result;
         }
 
         const size_t GetScores() const noexcept {
@@ -203,7 +203,7 @@ namespace model {
             return lost_objects_;
         }
         /* Удаление всех элементов списка, индексы которых отмечены true */
-        void RemoveObjectsFromLost(std::vector<bool> idxs_to_remove);
+        void RemoveObjectsFromLost(const std::vector<bool>& idxs_to_remove);
 
         /* 1) Получаем от генератора количество новых потерянных предметов случайным образом.
          * 2) Генерируем для каждого из них:

@@ -50,8 +50,8 @@ class LoggingRequestHandler {
                                                               std::string(request.target()),
                                                               std::string(request.method_string()));
     }
-    static void LogResponse(const std::string client_address, const int time_msec,
-                            const int response_code, const std::string_view content_type) {
+    static void LogResponse(const std::string client_address, int time_msec,
+                            int response_code, std::string_view content_type) {
         BOOST_LOG_TRIVIAL(info) << json_loader::GetLogResponse(GetTimeStampString(),
                                                                client_address,
                                                                time_msec,
@@ -72,7 +72,6 @@ public:
         LogRequest(req, client_address);
 
         ptime start_time = microsec_clock::universal_time();
-        //std::variant<EmptyResponse, StringResponse, FileResponse> answer = decorated_(std::move(req));
         (*decorated_)(std::forward<decltype(req)>(req),
                    std::forward<decltype(send)>(send),
                     [start_time, client_address](const unsigned int response_code, const std::string content_type) {

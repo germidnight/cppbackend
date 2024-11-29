@@ -1,5 +1,6 @@
 #include "model.h"
 
+#include <algorithm>
 #include <cmath>
 #include <random>
 #include <stdexcept>
@@ -118,23 +119,11 @@ namespace detail {
 
     /* Дороги общие для начальной точки пути и для конечной точки пути */
     bool FoundRoad(const std::vector<size_t> &roads_now, const std::vector<size_t> &roads_future) {
-        /* предполагается малое число элементов в векторах */
-        if (!roads_now.empty() && !roads_future.empty()) {
+	if (!roads_now.empty() && !roads_future.empty()) {
             /* предполагается малое число элементов в векторах */
-            for (const size_t road_n : roads_now) {
-                for (const size_t road_f : roads_future) {
-                    if (road_n == road_f) {
-                        return true;
-                    }
-                }
-            }
-            /* для большого количества элементов векторах */
-            /*std::set<size_t> temp_r_f{roads_future.begin(), roads_future.end()};
-            for (const size_t road_n : roads_now) {
-                if (temp_r_f.count(road_n) > 0) {
-                    return true;
-                }
-            }*/
+	    return std::any_of(roads_now.begin(), roads_now.end(), [&roads_future](size_t road_n) {
+                return (std::find(roads_future.begin(), roads_future.end(), road_n) != roads_future.end());
+            });
         }
 
         return false;
@@ -281,7 +270,7 @@ std::vector<size_t> Map::GetRoadByPosition(const Position &pos) const {
             }
         }
     }
-    return std::move(found_road_idxs);
+    return found_road_idxs;
 }
 
 }  // namespace model

@@ -22,7 +22,7 @@ namespace players {
         struct TokenTag {
             TokenTag(uint64_t first, uint64_t second) : tag{first, second} {}
 
-            std::string Serialize(); // длина строки всегда 32 hex цифры (128 бит)
+            std::string Serialize() const; // длина строки всегда 32 hex цифры (128 бит)
 
             uint64_t tag[2];
         };

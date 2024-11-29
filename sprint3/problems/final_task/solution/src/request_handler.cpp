@@ -74,17 +74,17 @@ namespace http_handler {
      * - 0 - всё хорошо, файл найден,
      * - 1 - ошибка - искомый файл не найден,
      * - 2 - ошибка - выход за пределы разрешённой директории */
-    int isSafePath(const std::filesystem::path& norm_root, const std::filesystem::path& check) {
+    int isSafePath(const std::filesystem::path& norm_root, const std::filesystem::path& child) {
         std::error_code ec;
-        auto const norm_check = std::filesystem::canonical(check, ec);
+        auto const norm_child = std::filesystem::canonical(child, ec);
         if (ec) {
             return 1;
         }
 
-        auto it = std::search(norm_check.begin(), norm_check.end(),
+        auto it = std::search(norm_child.begin(), norm_child.end(),
                                norm_root.begin(), norm_root.end());
 
-        if (it == norm_check.begin()) {
+        if (it == norm_child.begin()) {
             return 0;
         }
         return 2;

@@ -7,7 +7,7 @@ namespace players {
 
 namespace detail {
     // длина строки всегда 32 hex цифры (128 бит)
-    std::string TokenTag::Serialize() {
+    std::string TokenTag::Serialize() const {
         const size_t len_of_64bit_word_in_hex = 16;
         std::ostringstream os;
         for (int i = 0; i < 2; ++i) {
@@ -96,7 +96,7 @@ namespace detail {
                 res_players.push_back(next_player);
             }
         }
-        return std::move(res_players);
+        return res_players;
     }
 
     void Application::SetDogAction(std::shared_ptr<Player> player, ActionMove action_move) {
