@@ -3,7 +3,7 @@ overload:
 phantom:
   address: cppserver:8080                   # адрес тестируемого приложения
   ammofile: /var/loadtest/ammo_local.txt    # путь к файлу с патронами
-  ammo_type: phantom                        # тип запросов POST (или uri для GET)
+  ammo_type: uri                        # тип запросов POST (или uri для GET)
   load_profile:
     load_type: rps                          # тип нагрузки
     schedule: const(270, 1m)                # постоянный профиль 570 rps в течение минуты
