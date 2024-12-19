@@ -444,27 +444,6 @@ std::optional<double> LoadTimeDelta(std::string_view request_body) {
     }
 }
 
-std::optional<ChampionsParams> LoadChampionsParams(std::string_view request_body) {
-    const std::string start_str = "start";
-    const std::string max_items_str = "maxItems";
-    boost::json::object params_data;
-    int64_t start = 0;
-    int64_t max_items = 100;
-    try {
-        params_data = boost::json::parse(std::string(request_body)).as_object();
-    } catch (...) {
-        return std::nullopt;
-    }
-    try {
-        start = params_data.at(start_str).as_int64();
-    } catch (...) {}
-    try {
-        max_items = params_data.at(max_items_str).as_int64();
-    } catch (...) {}
-
-    return ChampionsParams{start, max_items};
-}
-
 // Вывод сообщений об ошибках
 std::string MakeErrorString(std::string &&err_code, std::string &&err_text) {
     const std::string err_code_str = "code";

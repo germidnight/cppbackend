@@ -59,12 +59,6 @@ JoinGame LoadJSONJoinGame(std::string_view request_body);
 std::optional<std::string> LoadActionMove(std::string_view request_body);
 std::optional<double> LoadTimeDelta(std::string_view request_body); // значение времени в секундах
 
-struct ChampionsParams {
-    int64_t start; // номер начального элемента запрашиваемого списка победителей
-    int64_t max_items; // максимальное количество элементов запрашиваемого списка победителей
-};
-std::optional<ChampionsParams> LoadChampionsParams(std::string_view request_body);
-
 // Вывод сообщений об ошибках
 std::string MakeErrorString(std::string&& err_code, std::string&& err_text);
 

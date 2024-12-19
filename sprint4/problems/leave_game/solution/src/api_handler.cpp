@@ -191,11 +191,7 @@ namespace http_handler {
             if (get_head) {
                 return get_head.value();
             }
-            auto ct_json = AssureContentTypeIsJSON(req[http::field::content_type], version, keep_alive);
-            if (ct_json) {
-                return ct_json.value();
-            }
-            return HandleChampions(req.body(), version, keep_alive, req.method() == http::verb::head);
+            return HandleChampions(std::move(req));
         } else {
             // Неправильный запрос
             return text_response(http::status::bad_request, json_loader::MakeErrorString("badRequest", "Invalid endpoint"));
@@ -347,34 +343,75 @@ namespace http_handler {
     /*
      * Обработка запроса на получение списка рекордсменов
      */
-    StringResponse APIHandler::HandleChampions(std::string_view body,
-                                               unsigned int version,
-                                               bool keep_alive,
-                                               bool head_only) {
+    StringResponse APIHandler::HandleChampions(const StringRequest&& req) {
+        unsigned int version = req.version();
+        bool keep_alive = req.keep_alive();
+        bool head_only = req.method() == http::verb::head;
         const auto text_response = [version, keep_alive](http::status status, std::string_view text, size_t length = 0,
                                                          std::string allowed_methods = "GET, HEAD"s) {
             return MakeStringResponse(status, text, version, keep_alive, ContentType::JSON, length, allowed_methods);
         };
         constexpr size_t MAXITEMS = 100;
 
-        size_t start = 0;
-        size_t max_items = 100;
-        if (auto params = json_loader::LoadChampionsParams(body)) {
-            if ((params->start < 0) ||
-                (params->max_items < 0) ||
-                (params->max_items > MAXITEMS)) {
-                return text_response(http::status::bad_request, json_loader::MakeErrorString("invalidArgument",
+        auto params = LoadGETParams(req.target());
+        if ((params.first < 0) ||
+            (params.second < 0) ||
+            (params.second > MAXITEMS)) {
+            return text_response(http::status::bad_request, json_loader::MakeErrorString("invalidArgument",
                                                                             "Invalid parameter values"));
-            }
-            start = static_cast<size_t>(params->start);
-            max_items = static_cast<size_t>(params->max_items);
         }
+        size_t start = static_cast<size_t>(params.first);
+        size_t max_items = static_cast<size_t>(params.second);
+
         if (head_only) {
             return text_response(http::status::ok, "", json_loader::MakeChampionsAnswer(
                                 app_.GetChampions(start, max_items)).length());
         }
         return text_response(http::status::ok, json_loader::MakeChampionsAnswer(
                                 app_.GetChampions(start, max_items)));
+    }
+
+    std::pair<int64_t, int64_t> LoadGETParams(std::string_view str) {
+        const std::string start_str = "start"s;
+        const std::string max_items_str = "maxItems"s;
+        const std::string_view numbers = "0123456789"sv;
+        int64_t start, max_items;
+
+        size_t pos_start = str.find(start_str);
+        if (pos_start != str.npos) {
+            pos_start += (start_str.length() + 1);
+            size_t pos_end = str.find_first_not_of(numbers, pos_start);
+            if (pos_end == str.npos) {
+                pos_end = str.length();
+            }
+            std::string_view start_str = str.substr(pos_start, pos_end - pos_start);
+            try {
+                start = std::stoi(std::string(start_str));
+            } catch (const std::exception &) {
+                start = 0;
+            }
+        } else {
+            start = 0;
+        }
+
+        size_t pos_items = str.find(max_items_str);
+        if (pos_items != str.npos) {
+            pos_items += (max_items_str.length() + 1);
+            size_t pos_end = str.find_first_not_of(numbers, pos_items);
+            if (pos_end == str.npos) {
+                pos_end = str.length();
+            }
+            std::string_view items_str = str.substr(pos_items, pos_end - pos_items);
+            try {
+                max_items = std::stoi(std::string(items_str));
+            } catch (const std::exception &) {
+                max_items = 100;
+            }
+        } else {
+            max_items = 100;
+        }
+
+        return std::make_pair(start, max_items);
     }
 
 } // namespace http_handler

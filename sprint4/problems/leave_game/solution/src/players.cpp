@@ -194,7 +194,7 @@ namespace detail {
                                         model::LostObject::GATHERER_HALF_WIDTH};
 
             player->GetDog()->IncTotalTime(time_period);
-            if (state.velocity.IsZero()) {
+            if (state == player->GetDog()->GetDogState()) {
                 player->GetDog()->IncInactiveTime(time_period);
             } else {
                 player->GetDog()->ResetInactiveTime();

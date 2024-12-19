@@ -68,6 +68,8 @@ namespace http_handler {
     std::optional<StringResponse> AssureMethodIsPOST(http::verb uri_method, unsigned http_version, bool keep_alive);
     std::optional<StringResponse> AssureContentTypeIsJSON(std::string_view ct, unsigned http_version, bool keep_alive);
 
+    std::pair<int64_t, int64_t> LoadGETParams(std::string_view str);
+
     /* ------------------------------------ Обработчик запросов к API ------------------------------------ */
     class APIHandler {
     public:
@@ -97,10 +99,7 @@ namespace http_handler {
         StringResponse HandleTick(std::string_view body,
                                   unsigned int version,
                                   bool keep_alive);
-        StringResponse HandleChampions(std::string_view body,
-                                       unsigned int version,
-                                       bool keep_alive,
-                                       bool head_only);
+        StringResponse HandleChampions(const StringRequest&& req);
 
         /* Проверяет правильность авторизации и запускает функцию action */
         template <typename Fn>
