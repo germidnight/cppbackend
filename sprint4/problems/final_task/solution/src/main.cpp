@@ -66,16 +66,16 @@ int main(int argc, const char* argv[]) {
         postgres::Database db{GetDBURLFromEnv(), num_threads/2};
 
         // 3. Загружаем карту из файла и строим модель игры
-        std::optional<std::string_view> autosave_file = std::nullopt;
+        std::optional<std::string_view> autosave_file_name = std::nullopt;
         if ((args->autosave_period > 0) && !args->state_file.empty()) {
-            autosave_file = args->state_file;
+            autosave_file_name = args->state_file;
         }
         model::Game game = json_loader::LoadGame(args->config_file);
         players::Application app(game,
                                 args->randomize_spawn_points,
                                 args->test_mode,
                                 args->tick_period,
-                                autosave_file,
+                                autosave_file_name,
                                 db.GetApplicationRepository());
 
         // 4. Инициализируем io_context
@@ -101,11 +101,11 @@ int main(int argc, const char* argv[]) {
 
         // 7. Загружаем состояние игры (при необходимости и возможности)
         if (!args->state_file.empty()) {
-            std::ifstream autosave_file(args->state_file, std::ios::in);
-            if (autosave_file.is_open()) {
+            std::ifstream autosave_restore(args->state_file, std::ios::in);
+            if (autosave_restore.is_open()) {
                 std::stringstream stream;
-                std::string file_str{std::istreambuf_iterator<char>(autosave_file), std::istreambuf_iterator<char>()};
-                autosave_file.close();
+                std::string file_str{std::istreambuf_iterator<char>(autosave_restore), std::istreambuf_iterator<char>()};
+                autosave_restore.close();
                 stream << file_str;
                 players::DeserializeState(stream, app);
             }

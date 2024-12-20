@@ -69,8 +69,6 @@ namespace detail {
     std::shared_ptr<Player> Players::Add(std::string player_name,
                                          std::shared_ptr<model::GameSession> game_session,
                                          bool randomize_spawn_point) {
-        model::Map* game_map = game_session->GetMap();
-
         model::Position position;
         if (randomize_spawn_point) {
             position = game_session->GetMap()->GetRandomPositionOnRoads();
