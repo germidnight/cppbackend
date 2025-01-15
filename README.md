@@ -1,3 +1,5 @@
+# Дипломная работа лежит в каталоге sprint4/problems/final_task/solution
+
 # cpp-backend-template
 
 Шаблон репозитория для практического трека «C++ backend».
